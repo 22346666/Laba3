@@ -23,6 +23,9 @@ void log_in(vector<User>& users, User* current_user);
 User* find_account(vector<User>& users, const string name);
 void work_admin(vector<User>& users, User* current_user);
 void work_user(vector<User>& users, User* current_user);
+void block_user(vector<User>& users);
+void switch_restrictions(vector<User>& users);
+void write_to_file(vector<User>& users);
 
 
 int main()
@@ -32,10 +35,11 @@ int main()
 
 
 void scan_file(vector<User>& users) {
-    fstream file;
+    ifstream file;
     file.open("D:\\Games\\Users.txt");
     if (!file) {
         cout << "No such file here";
+        return;
     }
     users.clear();
 
@@ -46,6 +50,7 @@ void scan_file(vector<User>& users) {
         getline(file, line);
         user.password = line;
         user.password_length = line.length();
+        getline(file, line);
         getline(file, line);
         user.blocked = (line == "true" || line == "True");
         getline(file, line);
@@ -86,11 +91,13 @@ void start_work()
         case '*':
             cout << "Exiting menu, goodbye!" << endl;
             active_menu = false;
+            break;
         default:
             cout << "There is no such option" << endl;
             break;
         }
     }
+    write_to_file(users);
 }
 
 void print_users(const vector<User>& users)
@@ -140,19 +147,35 @@ bool check_requirements(const string password)
 
 void change_password(User* user)
 {
-    
     while (true) {
-        cout << "Enter password of the user (must be letters and math operators): ";
-        string password;
-        cin >> password;
-        if (check_requirements(password) || !user->restrictions) {
-            user->password = password;
-            user->password_length = user->password.length();
-            cout << "Succesfully changed password!" << endl;
-            break;
+        if (user->password.length() != 0) {
+            cout << "Enter your old password: ";
+            string old_password;
+            cin >> old_password;
+            if (old_password == user->password) {
+            }
+            else {
+                cout << "Passwords doesn't match" << endl;
+                continue;
+            }
         }
-        cout << "Your password didn't met requirements. Try again" << endl;
-    }
+                cout << "Enter password of the user ";
+                if (user->restrictions) {
+                    cout << "(letters and math operators required)";
+                }
+                cout << ": ";
+                string password;
+                cin >> password;
+                if (check_requirements(password) || !user->restrictions) {
+                    user->password = password;
+                    user->password_length = user->password.length();
+                    cout << "Succesfully changed password!" << endl;
+                    break;
+                }
+                cout << "Your password didn't met requirements. Try again using math operators and letters" << endl;
+            }
+            
+
 }
 
 void first_account(vector<User>& users)
@@ -185,7 +208,7 @@ void log_in(vector<User>& users, User* current_user)
                 cout << "Succesfully logged in" << endl;
                 cout << "------------------------" << endl;
                 if (current_user->is_admin) {
-
+                    work_admin(users, current_user);
                 }
                 else {
                     work_user(users, current_user);
@@ -218,7 +241,7 @@ void work_admin(vector<User>& users, User* current_user)
     bool active_menu = true;
     cout << "Greetings, " << current_user->name << endl;
     while (active_menu) {
-        cout << "Press 1 to change password, press 2 to display all users, press 3 to block user, press 4 to  press * to exit: ";
+        cout << "Press 1 to change password, press 2 to display all users, press 3 to block user, press 4 to change user's password restrictions press * to exit: ";
         char choise;
         cin >> choise;
         switch (choise)
@@ -229,8 +252,14 @@ void work_admin(vector<User>& users, User* current_user)
         case '2':
             print_users(users);
             break;
+        case '3':
+            block_user(users);
+            break;
+        case '4':
+            switch_restrictions(users);
+            break;
         case '*':
-            cout << "Exiting menu, goodbye!" << endl;
+            cout << "Exiting account, goodbye!" << endl;
             active_menu = false;
             break;
         default:
@@ -244,6 +273,10 @@ void work_user(vector<User>& users, User* current_user)
 {
     bool active_menu = true;
     cout << "Greetings, " << current_user->name << endl;
+    if (current_user->blocked) {
+        cout << "You are blocked, you can't do nothing" << endl;
+        return;
+    }
     while (active_menu) {
         cout << "Press 1 to change password, press 2 to display all users, press * to exit: ";
         char choise;
@@ -257,7 +290,7 @@ void work_user(vector<User>& users, User* current_user)
             print_users(users);
             break;
         case '*':
-            cout << "Exiting menu, goodbye!" << endl;
+            cout << "Exiting account, goodbye!" << endl;
             active_menu = false;
             break;
         default:
@@ -265,4 +298,65 @@ void work_user(vector<User>& users, User* current_user)
             break;
         }
     }
+}
+
+void block_user(vector<User>& users)
+{
+    string name;
+    cout << "Enter name of user: ";
+    cin >> name;
+    User* user = find_account(users, name);
+    if (user != nullptr && !user->is_admin) {
+        cout << "This user is " << (user->blocked ? "blocked" : "not blocked") << ". Enter 1 if you want to change it: ";
+        char choice;
+        cin >> choice;
+        if (choice == '1') {
+            user->blocked = !user->blocked;
+        }
+        
+    }
+    else if (user==nullptr){
+        
+        cout << "There is no users with such name to block" << endl;
+    }
+    else {
+        cout << "You can't block admins!" << endl;
+    }
+}
+
+void switch_restrictions(vector<User>& users)
+{
+    string name;
+    cout << "Enter name of user: ";
+    cin >> name;
+    User* user = find_account(users, name);
+    if (user != nullptr) {
+        cout << "This user is " << (user->restrictions ? "restricted" : "not restricted") << ". Enter 1 if you want to change it: ";
+        char choice;
+        cin >> choice;
+        if (choice == '1') {
+            user->restrictions = !user->restrictions;
+        }
+    }
+    else {
+        cout << "There is no users with such name to restrict" << endl;
+    }
+}
+
+void write_to_file(vector<User>& users)
+{
+    ofstream file("D:\\Games\\Users.txt");
+    if (!file) {
+        cout << "Can't write to file";
+        return;
+    }
+    for (const User& user : users) {
+        file << user.name << endl;
+        file << user.password << endl;
+        file << user.password_length << endl;
+        file << (user.blocked ? "true" : "false") << endl;
+        file << (user.restrictions ? "true" : "false") << endl;
+        file << (user.is_admin ? "true" : "false") << endl;
+    }
+    file.close();
 }
