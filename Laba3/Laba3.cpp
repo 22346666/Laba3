@@ -36,9 +36,9 @@ int main()
 
 void scan_file(vector<User>& users) {
     ifstream file;
-    file.open("D:\\Games\\Users.txt");
+    file.open("Users.txt");
     if (!file) {
-        cout << "No such file here";
+        cout << "No such file here" << endl;
         return;
     }
     users.clear();
@@ -69,7 +69,7 @@ void start_work()
     scan_file(users);
     if (users.size() == 0) {
         first_account(users);
-        cout << "It seems there is no active accounts. Basic admin account created" << endl;
+        cout << "It seems there is no active accounts. Basic admin account with \"11\" password created" << endl;
     }
     bool active_menu = true;
     while (active_menu) {
@@ -182,7 +182,7 @@ void first_account(vector<User>& users)
 {
     User admin;
     admin.name = "Admin";
-    admin.password = "";
+    admin.password = "11";
     admin.password_length = admin.password.length();
     admin.is_admin = true;
     users.push_back(admin);
@@ -345,9 +345,9 @@ void switch_restrictions(vector<User>& users)
 
 void write_to_file(vector<User>& users)
 {
-    ofstream file("D:\\Games\\Users.txt");
+    ofstream file("Users.txt");
     if (!file) {
-        cout << "Can't write to file";
+        cout << "Can't write to file" << endl;;
         return;
     }
     for (const User& user : users) {
