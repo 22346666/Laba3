@@ -19,6 +19,8 @@ void create_user(vector<User>& users);
 bool check_requirements(const string password);
 void change_password(User& user);
 void first_account(vector<User>& users);
+void log_in(vector<User>& users, User* current_user);
+User* find_account(vector<User>& users, const string name);
 
 
 int main()
@@ -62,29 +64,50 @@ void start_work()
         first_account(users);
         cout << "It seems there is no active accounts. Basic admin account created" << endl;
     }
-    while (true) {
-
-        
+    bool active_menu = true;
+    while (active_menu) {
+        User* current_user = nullptr;
+        cout << "Press 1 to log in account, press 2 to create new account, press 3 to display users, press * to exit: ";
+        char choise;
+        cin >> choise;
+        switch (choise)
+        {
+        case '1':
+            log_in(users, current_user);
+            break;
+        case '2':
+            create_user(users);
+            break;
+        case '3':
+            print_users(users);
+            break;
+        case '*':
+            cout << "Exiting menu, goodbye!" << endl;
+            active_menu = false;
+        default:
+            cout << "There is no such option" << endl;
+            break;
+        }
     }
 }
 
 void print_users(const vector<User>& users)
 {
+    cout << "------------------------" << endl;
     for (const User& user : users) {
-        cout << user.name << " ";
-        if (user.blocked) {
-            cout << "blocked ";
-        }
-        if (user.is_admin) {
-            cout << "admin ";
-        }
+        cout << user.name << " is ";
+        cout << (user.is_admin ? "admin, " : "common user, ");
+        cout << (user.blocked ? "blocked, " : "");
+        cout << (user.restrictions ? "has password restrictions" : "has no password restrictions");
         cout << endl;
     }
+    cout << "------------------------" << endl;
 }
 
 void create_user(vector<User>& users)
 {
     User user;
+    cout << "------------------------" << endl;
     cout << "Enter name of the user: ";
     cin >> user.name;
     change_password(user);
@@ -93,6 +116,8 @@ void create_user(vector<User>& users)
     cin >> answer;
     user.is_admin = (answer == "Yes" || answer == "yes");
     users.push_back(user);
+    cout << "User was created succesfully" << endl;
+    cout << "------------------------" << endl;
 }
 
 bool check_requirements(const string password)
@@ -135,4 +160,46 @@ void first_account(vector<User>& users)
     admin.password_length = admin.password.length();
     admin.is_admin = true;
     users.push_back(admin);
+}
+
+void log_in(vector<User>& users, User* current_user)
+{
+    cout << "------------------------" << endl;
+    cout << "Enter account name: ";
+    string name;
+    cin >> name;
+    current_user = find_account(users, name);
+    if (current_user==nullptr) {
+        cout << "There is no user with such name" << endl;
+        return;
+    }
+    else {
+        while (true) {
+            cout << "Enter password or enter * to escape: ";
+            string password;
+            cin >> password;
+            if (password == current_user->password) {
+                cout << "Succesfully logged in" << endl;
+                cout << "------------------------" << endl;
+                return;
+            }
+            else if (password == "*") {
+                cout << "------------------------" << endl;
+                return;
+            }
+            else {
+                cout << "Wrong password" << endl;
+            }
+        }
+    }
+}
+
+User* find_account(vector<User>& users, const string name)
+{
+    for (User& user : users) {
+        if (user.name == name) {
+            return &user;
+        }
+    }
+    return nullptr;
 }
