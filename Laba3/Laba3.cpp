@@ -17,10 +17,12 @@ void start_work();
 void print_users(const vector<User>& users);
 void create_user(vector<User>& users);
 bool check_requirements(const string password);
-void change_password(User& user);
+void change_password(User* user);
 void first_account(vector<User>& users);
 void log_in(vector<User>& users, User* current_user);
 User* find_account(vector<User>& users, const string name);
+void work_admin(vector<User>& users, User* current_user);
+void work_user(vector<User>& users, User* current_user);
 
 
 int main()
@@ -106,18 +108,19 @@ void print_users(const vector<User>& users)
 
 void create_user(vector<User>& users)
 {
-    User user;
+    User* user = new User;
     cout << "------------------------" << endl;
     cout << "Enter name of the user: ";
-    cin >> user.name;
+    cin >> user->name;
     change_password(user);
     cout << "You want this user to be administrator? Print \"Yes\" if so, otherwise this user will be default user: ";
     string answer;
     cin >> answer;
-    user.is_admin = (answer == "Yes" || answer == "yes");
-    users.push_back(user);
+    user->is_admin = (answer == "Yes" || answer == "yes");
+    users.push_back(*user);
     cout << "User was created succesfully" << endl;
     cout << "------------------------" << endl;
+    delete user;
 }
 
 bool check_requirements(const string password)
@@ -135,16 +138,16 @@ bool check_requirements(const string password)
     return has_letter&&has_operator;
 }
 
-void change_password(User& user)
+void change_password(User* user)
 {
     
     while (true) {
         cout << "Enter password of the user (must be letters and math operators): ";
         string password;
         cin >> password;
-        if (check_requirements(password) || !user.restrictions) {
-            user.password = password;
-            user.password_length = user.password.length();
+        if (check_requirements(password) || !user->restrictions) {
+            user->password = password;
+            user->password_length = user->password.length();
             cout << "Succesfully changed password!" << endl;
             break;
         }
@@ -181,6 +184,12 @@ void log_in(vector<User>& users, User* current_user)
             if (password == current_user->password) {
                 cout << "Succesfully logged in" << endl;
                 cout << "------------------------" << endl;
+                if (current_user->is_admin) {
+
+                }
+                else {
+                    work_user(users, current_user);
+                }
                 return;
             }
             else if (password == "*") {
@@ -202,4 +211,58 @@ User* find_account(vector<User>& users, const string name)
         }
     }
     return nullptr;
+}
+
+void work_admin(vector<User>& users, User* current_user)
+{
+    bool active_menu = true;
+    cout << "Greetings, " << current_user->name << endl;
+    while (active_menu) {
+        cout << "Press 1 to change password, press 2 to display all users, press 3 to block user, press 4 to  press * to exit: ";
+        char choise;
+        cin >> choise;
+        switch (choise)
+        {
+        case '1':
+            change_password(current_user);
+            break;
+        case '2':
+            print_users(users);
+            break;
+        case '*':
+            cout << "Exiting menu, goodbye!" << endl;
+            active_menu = false;
+            break;
+        default:
+            cout << "There is no such option" << endl;
+            break;
+        }
+    }
+}
+
+void work_user(vector<User>& users, User* current_user)
+{
+    bool active_menu = true;
+    cout << "Greetings, " << current_user->name << endl;
+    while (active_menu) {
+        cout << "Press 1 to change password, press 2 to display all users, press * to exit: ";
+        char choise;
+        cin >> choise;
+        switch (choise)
+        {
+        case '1':
+            change_password(current_user);
+            break;
+        case '2':
+            print_users(users);
+            break;
+        case '*':
+            cout << "Exiting menu, goodbye!" << endl;
+            active_menu = false;
+            break;
+        default:
+            cout << "There is no such option" << endl;
+            break;
+        }
+    }
 }
